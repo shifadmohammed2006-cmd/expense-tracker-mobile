@@ -4,11 +4,11 @@
     "preview": {
       "distribution": "internal",
       "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://YOUR-API-NAME.onrender.com" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://expense-tracker-api-s6yg.onrender.com" }
     },
     "production": {
       "autoIncrement": true,
-      "env": { "EXPO_PUBLIC_API_URL": "https://YOUR-API-NAME.onrender.com" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://expense-tracker-api-s6yg.onrender.com" }
     }
   },
   "submit": { "production": {} }

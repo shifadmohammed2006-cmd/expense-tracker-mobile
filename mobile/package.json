@@ -1,0 +1,22 @@
+{
+  "name": "expense-tracker-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "tunnel": "expo start --tunnel",
+    "android": "expo start --android",
+    "ios": "expo start --ios"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "*",
+    "expo": "~57.0.0",
+    "expo-secure-store": "*",
+    "expo-status-bar": "*",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "*",
+    "react-native-svg": "*"
+  }
+}

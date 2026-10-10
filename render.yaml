@@ -1,0 +1,17 @@
+# Optional: Render "Blueprint" for the API. Or just create the service by hand (see README).
+services:
+  - type: web
+    name: expense-tracker-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false        # you paste this in the Render dashboard
+      - key: JWT_SECRET
+        generateValue: true

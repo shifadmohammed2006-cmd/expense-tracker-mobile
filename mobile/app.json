@@ -3,6 +3,11 @@
     "name": "Expense Tracker",
     "slug": "expense-tracker",
     "version": "1.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "24796fce-a98c-47a3-bbe8-d1a349d5ed83"
+      }
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "expensetracker",

@@ -1,3 +1,4 @@
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';

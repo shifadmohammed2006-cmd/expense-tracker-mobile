@@ -1,3 +1,4 @@
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
@@ -8,6 +9,9 @@ import categoriesRouter from './src/routes/categories.js';
 import budgetRouter from './src/routes/budget.js';
 import statsRouter from './src/routes/stats.js';
 import dataRouter from './src/routes/data.js';
+import tripsRouter from './src/routes/trips.js';
+import appVersionRouter from './src/routes/appVersion.js';
+import { oldAppGate, updatePage } from './src/oldAppGate.js';
 import { requireAuth } from './src/auth.js';
 
 const PORT = process.env.PORT || 5000;
@@ -24,18 +28,22 @@ app.set('trust proxy', 1);
 
 // The mobile app is not a browser, so CORS only matters for web clients.
 app.use(cors());
-app.use(express.json({ limit: '100kb' }));
+app.use(express.json({ limit: '1mb' }));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', db: mongoose.connection.readyState === 1 ? 'connected' : 'connecting' });
 });
 
+app.use('/api', oldAppGate);
+app.get('/update', updatePage);
+app.use('/api/app-version', appVersionRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/expenses', requireAuth, expensesRouter);
 app.use('/api/categories', requireAuth, categoriesRouter);
 app.use('/api/budget', requireAuth, budgetRouter);
 app.use('/api/stats', requireAuth, statsRouter);
 app.use('/api/data', requireAuth, dataRouter);
+app.use('/api/trips', requireAuth, tripsRouter);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found.' });

@@ -15,3 +15,13 @@ services:
         sync: false        # you paste this in the Render dashboard
       - key: JWT_SECRET
         generateValue: true
+      - key: APP_LATEST_VERSION
+        value: 2.1.0
+      - key: APP_MIN_VERSION
+        value: 1.0.0
+      - key: APP_APK_URL
+        value: ''
+      - key: APP_UPDATE_NOTES
+        value: ''
+      - key: FORCE_UPDATE_OLD_APPS
+        value: 'false'

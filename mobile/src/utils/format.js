@@ -1,12 +1,22 @@
-export function formatCurrency(amount, currency = 'USD') {
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
+// Indian digit grouping: 1234567 -> 12,34,567
+function groupIndian(intStr) {
+  const last3 = intStr.slice(-3);
+  const rest = intStr.slice(0, -3);
+  return rest ? `${rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',')},${last3}` : last3;
+}
+
+export function formatCurrency(amount, currency = 'INR') {
+  const n = Number(amount) || 0;
+  if (currency === 'INR') {
+    const rounded = Math.round(Math.abs(n) * 100) / 100;
+    const [i, d] = rounded.toFixed(Number.isInteger(rounded) ? 0 : 2).split('.');
+    return `${n < 0 && rounded !== 0 ? '-' : ''}₹${groupIndian(i)}${d ? `.${d}` : ''}`;
+  }
   try {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 2,
-    }).format(amount || 0);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 2 }).format(n);
   } catch {
-    return `${currency} ${Number(amount || 0).toFixed(2)}`;
+    return `${currency} ${n.toFixed(2)}`;
   }
 }
 
@@ -47,6 +57,10 @@ export function formatDayLabel(dateStr) {
   return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 }
 
+export function weekdayShort(dateStr) {
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString('en-US', { weekday: 'short' });
+}
+
 export function monthLabel(monthStr) {
   const [y, m] = monthStr.split('-');
   return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('en-US', {
@@ -54,3 +68,21 @@ export function monthLabel(monthStr) {
     year: 'numeric',
   });
 }
+
+// Whole days from a to b (b - a). Negative if b is earlier.
+export function diffDays(a, b) {
+  const ms = new Date(`${b}T00:00:00`) - new Date(`${a}T00:00:00`);
+  return Math.round(ms / 86400000);
+}
+
+// Inclusive number of days in a trip (same day = 1).
+export const inclusiveDays = (start, end) => Math.max(diffDays(start, end) + 1, 1);
+
+export function listDates(start, end) {
+  const out = [];
+  const n = inclusiveDays(start, end);
+  for (let i = 0; i < Math.min(n, 120); i++) out.push(addDays(start, i));
+  return out;
+}
+
+export const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;

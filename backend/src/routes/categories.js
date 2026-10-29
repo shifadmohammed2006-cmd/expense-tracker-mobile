@@ -1,3 +1,4 @@
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import { Router } from 'express';
 import { Category, Expense, toCategory, isValidId, COLOR_RE } from '../models.js';
 import { wrap } from '../wrap.js';

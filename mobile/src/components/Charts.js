@@ -1,3 +1,4 @@
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import React from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import Svg, { Circle, G, Line, Rect, Text as SvgText } from 'react-native-svg';

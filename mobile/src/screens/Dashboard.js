@@ -1,9 +1,11 @@
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useApp } from '../context/AppContext';
 import { useTheme } from '../theme';
 import { BarChart, Donut } from '../components/Charts';
 import { Card, CategoryBadge, EmptyNote, MonthSwitcher, ProgressBar, ScreenHeader, Title, num, usePad } from '../components/ui';
+import SyncPill from '../components/SyncPill';
 import { formatCurrency, formatDate, formatDayLabel } from '../utils/format';
 
 function Stat({ label, value, color }) {
@@ -21,7 +23,7 @@ function Stat({ label, value, color }) {
 export default function Dashboard({ onEdit }) {
   const { colors } = useTheme();
   const pad = usePad();
-  const { stats, expenses, categories, loading, refreshing, refresh, month, setMonth } = useApp();
+  const { stats, insights, expenses, categories, loading, refreshing, refresh, month, setMonth } = useApp();
   const [selected, setSelected] = useState(null);
 
   const refreshControl = <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />;
@@ -43,7 +45,7 @@ export default function Dashboard({ onEdit }) {
 
   return (
     <ScrollView contentContainerStyle={pad} refreshControl={refreshControl}>
-      <ScreenHeader title="Overview" subtitle="Here's where your money went." />
+      <ScreenHeader title="Overview" subtitle="Here's where your money went." right={<SyncPill />} />
       <MonthSwitcher month={month} onChange={(m) => { setSelected(null); setMonth(m); }} />
 
       <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
@@ -70,6 +72,27 @@ export default function Dashboard({ onEdit }) {
               ? "You've gone over budget this month."
               : `${pctLeft.toFixed(0)}% of your budget is left.`}
           </Text>
+        </Card>
+      ) : null}
+
+      {insights && stats.isCurrent && stats.transactionCount > 0 ? (
+        <Card style={{ marginBottom: 14 }}>
+          <Title style={{ marginBottom: 8 }}>Insights</Title>
+          {hasLimit && stats.remaining > 0 && stats.daysLeft > 0 ? (
+            <Text style={{ color: colors.text, marginBottom: 6 }}>
+              💡 Safe to spend about <Text style={{ fontWeight: '700' }}>{formatCurrency(stats.remaining / stats.daysLeft, cur)}</Text> a day for the rest of the month.
+            </Text>
+          ) : null}
+          {insights.change !== null ? (
+            <Text style={{ color: colors.text, marginBottom: 6 }}>
+              {insights.change <= 0 ? '📉' : '📈'} {Math.abs(insights.change).toFixed(0)}% {insights.change <= 0 ? 'less' : 'more'} than last month so far.
+            </Text>
+          ) : null}
+          {insights.noSpendStreak > 0 ? (
+            <Text style={{ color: colors.text }}>
+              🔥 {insights.noSpendStreak} no-spend day{insights.noSpendStreak === 1 ? '' : 's'} in a row. Keep it going!
+            </Text>
+          ) : null}
         </Card>
       ) : null}
 

@@ -1,7 +1,9 @@
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import React, { useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
   Animated,
+  Easing,
   KeyboardAvoidingView,
   Modal,
   Pressable,
@@ -65,40 +67,60 @@ export function ScreenHeader({ title, subtitle, right }) {
 
 export function Button({ title, onPress, variant = 'primary', loading, disabled, icon, style }) {
   const { colors } = useTheme();
+  const scale = useRef(new Animated.Value(1)).current;
+  const spring = (v, b) => Animated.spring(scale, { toValue: v, speed: 40, bounciness: b, useNativeDriver: true }).start();
   const filled = variant === 'primary' || variant === 'danger';
   const bg = variant === 'primary' ? colors.primary : variant === 'danger' ? colors.danger : 'transparent';
   const fg = filled ? '#FFFFFF' : variant === 'dangerOutline' ? colors.danger : colors.text;
   const borderColor = variant === 'outline' ? colors.outline : variant === 'dangerOutline' ? colors.danger : 'transparent';
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled || loading}
-      style={({ pressed }) => [
-        {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          paddingVertical: 14,
-          paddingHorizontal: 18,
-          borderRadius: 14,
-          borderWidth: 1,
-          borderColor,
-          backgroundColor: bg,
-          opacity: disabled ? 0.5 : pressed ? 0.8 : 1,
-        },
-        style,
-      ]}
-    >
-      {loading ? (
-        <ActivityIndicator color={fg} />
-      ) : (
-        <>
-          {icon ? <Feather name={icon} size={17} color={fg} /> : null}
-          <Text style={{ color: fg, fontSize: 15, fontWeight: '600' }}>{title}</Text>
-        </>
-      )}
-    </Pressable>
+    <Animated.View style={[style, { transform: [{ scale }] }]}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => !disabled && !loading && spring(0.96, 0)}
+        onPressOut={() => spring(1, 5)}
+        disabled={disabled || loading}
+        style={[
+          {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            paddingVertical: 14,
+            paddingHorizontal: 18,
+            borderRadius: 14,
+            borderWidth: 1,
+            borderColor,
+            backgroundColor: bg,
+            opacity: disabled ? 0.5 : 1,
+          },
+        ]}
+      >
+        {loading ? (
+          <ActivityIndicator color={fg} />
+        ) : (
+          <>
+            {icon ? <Feather name={icon} size={17} color={fg} /> : null}
+            <Text style={{ color: fg, fontSize: 15, fontWeight: '600' }}>{title}</Text>
+          </>
+        )}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+// Fades and slides content in on mount - the smooth entrance every screen uses.
+export function Reveal({ children, style, delay = 0, from = 16 }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const y = useRef(new Animated.Value(from)).current;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 420, delay, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.spring(y, { toValue: 0, speed: 26, bounciness: 5, delay, useNativeDriver: true }),
+    ]).start();
+  }, [opacity, y, delay]);
+  return (
+    <Animated.View style={[style, { opacity, transform: [{ translateY: y }] }]}>{children}</Animated.View>
   );
 }
 

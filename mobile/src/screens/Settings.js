@@ -1,18 +1,21 @@
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import React, { useState } from 'react';
 import { Alert, ScrollView, Share, Switch, Text, View } from 'react-native';
-import { api } from '../api';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme';
 import { Button, Card, Chip, Field, ScreenHeader, SheetModal, Title, usePad } from '../components/ui';
 import { CURRENCIES } from '../utils/constants';
+import { APP_NAME, BRAND_LINE, COPYRIGHT, EXPORT_HEADER, NOTICE, VERSION } from '../branding';
+import Logo from '../components/Logo';
+import SyncPill from '../components/SyncPill';
 
 const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
 export default function Settings() {
   const { colors, isDark, setDark } = useTheme();
   const pad = usePad();
-  const { settings, categories, updateSettings, resetAll, showToast } = useApp();
+  const { settings, categories, allExpenses, pending, updateSettings, resetAll, showToast } = useApp();
   const { user, logout, deleteAccount } = useAuth();
   const [exporting, setExporting] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -20,18 +23,18 @@ export default function Settings() {
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
 
-  // Exports every expense (all months) through the phone's share sheet.
+  // Exports every expense (all months) through the phone's share sheet. Works offline - data is on the phone.
   const exportData = async (kind) => {
     setExporting(true);
     try {
-      const all = await api.getExpenses();
+      const all = [...allExpenses].sort((a, b) => (a.date < b.date ? 1 : -1));
       const nameOf = (id) => categories.find((c) => c.id === id)?.name || 'Uncategorized';
       const message =
         kind === 'csv'
-          ? ['Date,Category,Amount,Note']
+          ? [`# ${EXPORT_HEADER}`, 'Date,Category,Amount,Note']
               .concat(all.map((e) => [e.date, csvCell(nameOf(e.categoryId)), e.amount, csvCell(e.note)].join(',')))
               .join('\n')
-          : JSON.stringify({ expenses: all, categories, settings }, null, 2);
+          : JSON.stringify({ _copyright: EXPORT_HEADER, expenses: all, categories, settings }, null, 2);
       await Share.share({ message, title: kind === 'csv' ? 'expenses.csv' : 'expense-tracker-backup.json' });
     } catch (e) {
       showToast(e.message || 'Could not export.', 'error');
@@ -41,10 +44,16 @@ export default function Settings() {
   };
 
   const confirmLogout = () =>
-    Alert.alert('Log out?', 'You can log back in any time with your email and password.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', onPress: logout },
-    ]);
+    Alert.alert(
+      'Log out?',
+      pending
+        ? `${pending} change${pending === 1 ? ' is' : 's are'} not synced yet and will be lost if you log out. Connect to the internet first to keep them.`
+        : 'You can log back in any time with your email and password. Data saved on this phone is cleared.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log out', style: 'destructive', onPress: logout },
+      ]
+    );
 
   const confirmReset = () =>
     Alert.alert('Reset all data?', 'This permanently deletes all your expenses, categories and budgets. Your account stays.', [
@@ -71,7 +80,8 @@ export default function Settings() {
 
         <Card style={{ marginBottom: 14 }}>
           <Title>Account</Title>
-          <Text style={{ color: colors.subtext, marginBottom: 14 }}>{user?.email}</Text>
+          <Text style={{ color: colors.subtext, marginBottom: 10 }}>{user?.email}</Text>
+          <View style={{ marginBottom: 14 }}><SyncPill /></View>
           <Button title="Log out" variant="outline" icon="log-out" onPress={confirmLogout} />
         </Card>
 
@@ -123,7 +133,14 @@ export default function Settings() {
           />
         </Card>
 
-        <Text style={{ textAlign: 'center', color: colors.muted, fontSize: 12, marginTop: 8 }}>Expense Tracker · Made by Shifad</Text>
+        <Card style={{ alignItems: 'center', marginTop: 6 }}>
+          <Logo size={72} />
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginTop: 12 }}>{APP_NAME}</Text>
+          {BRAND_LINE ? <Text style={{ color: colors.primary, fontWeight: '600', marginTop: 2 }}>{BRAND_LINE}</Text> : null}
+          <Text style={{ color: colors.muted, fontSize: 12, marginTop: 2 }}>Version {VERSION}</Text>
+          <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600', marginTop: 14 }}>{COPYRIGHT}</Text>
+          <Text style={{ color: colors.subtext, fontSize: 11, textAlign: 'center', marginTop: 6, lineHeight: 16 }}>{NOTICE}</Text>
+        </Card>
       </ScrollView>
 
       <SheetModal visible={deleteOpen} onClose={() => setDeleteOpen(false)} title="Delete account?">

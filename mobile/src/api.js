@@ -1,8 +1,15 @@
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import * as SecureStore from 'expo-secure-store';
 import { API_URL } from './config';
+import { VERSION } from './branding';
 
 const TOKEN_KEY = 'et-token';
-const TIMEOUT_MS = 60000; // free hosting can take ~30-60s to wake up after being idle
+let timeoutMs = 60000; // free hosting can take ~30-60s to wake up after being idle
+
+// Background syncing uses a shorter wait so the app never feels stuck.
+export function setApiTimeout(ms) {
+  timeoutMs = ms;
+}
 
 export class ApiError extends Error {
   constructor(message, status = 0) {
@@ -46,11 +53,11 @@ export async function clearToken() {
 const AUTH_ATTEMPTS = ['/auth/login', '/auth/signup', '/auth/account'];
 
 async function request(path, options = {}) {
-  const headers = { 'Content-Type': 'application/json' };
+  const headers = { 'Content-Type': 'application/json', 'X-App-Version': VERSION };
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   let res;
   try {
@@ -101,4 +108,8 @@ export const api = {
 
   getStats: (month, today) => request(`/stats?month=${month}&today=${today}`),
   resetAll: () => request('/data/reset', { method: 'POST' }),
+
+  getTrips: () => request('/trips'),
+  saveTrip: (id, trip) => request(`/trips/${encodeURIComponent(id)}`, json('PUT', trip)),
+  deleteTrip: (id) => request(`/trips/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 };

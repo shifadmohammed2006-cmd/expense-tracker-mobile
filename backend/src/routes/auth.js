@@ -1,6 +1,7 @@
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { User, Category, Expense, seedDefaultCategories } from '../models.js';
+import { User, Category, Expense, Trip, seedDefaultCategories } from '../models.js';
 import { hashPassword, verifyPassword, fakeVerify, signToken, requireAuth } from '../auth.js';
 import { wrap } from '../wrap.js';
 
@@ -108,6 +109,7 @@ router.delete(
     await Promise.all([
       Expense.deleteMany({ userId: user._id }),
       Category.deleteMany({ userId: user._id }),
+      Trip.deleteMany({ userId: user._id }),
     ]);
     await user.deleteOne();
     res.json({ success: true });

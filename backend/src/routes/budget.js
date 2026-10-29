@@ -1,3 +1,4 @@
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import { Router } from 'express';
 import { User, toSettings } from '../models.js';
 import { wrap } from '../wrap.js';

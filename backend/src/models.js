@@ -1,3 +1,4 @@
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import mongoose from 'mongoose';
 
 const { Schema, model } = mongoose;
@@ -9,7 +10,7 @@ const userSchema = new Schema(
     hash: { type: String, required: true },
     settings: {
       monthlyLimit: { type: Number, default: 0 },
-      currency: { type: String, default: 'USD' },
+      currency: { type: String, default: 'INR' },
     },
   },
   { timestamps: true }
@@ -38,7 +39,21 @@ const expenseSchema = new Schema(
 );
 expenseSchema.index({ userId: 1, date: -1 });
 
+// One document per trip. The whole trip (costs, itinerary, split spends, packing list) lives in `data`,
+// which keeps offline syncing simple: the phone sends the full trip and the newest edit wins.
+const tripSchema = new Schema(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    tripId: { type: String, required: true, maxlength: 64 },
+    data: { type: Schema.Types.Mixed, required: true },
+    updatedAtClient: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+tripSchema.index({ userId: 1, tripId: 1 }, { unique: true });
+
 export const User = model('User', userSchema);
+export const Trip = model('Trip', tripSchema);
 export const Category = model('Category', categorySchema);
 export const Expense = model('Expense', expenseSchema);
 
@@ -81,5 +96,5 @@ export const toExpense = (e) => ({
 
 export const toSettings = (u) => ({
   monthlyLimit: u.settings?.monthlyLimit || 0,
-  currency: u.settings?.currency || 'USD',
+  currency: u.settings?.currency || 'INR',
 });

@@ -1,3 +1,4 @@
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Pressable, ScrollView, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -5,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme';
 import Logo from '../components/Logo';
+import { COPYRIGHT, MADE_BY } from '../branding';
 import { Button, Field } from '../components/ui';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -111,7 +113,7 @@ export default function AuthScreen() {
           </Text>
         </Pressable>
 
-        <Text style={{ color: colors.muted, fontSize: 12, textAlign: 'center', marginTop: 36 }}>Made by Shifad</Text>
+        <Text style={{ color: colors.muted, fontSize: 12, textAlign: 'center', marginTop: 36 }}>{COPYRIGHT}</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );

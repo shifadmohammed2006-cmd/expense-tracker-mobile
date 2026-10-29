@@ -1,3 +1,4 @@
+// © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import { Router } from 'express';
 import { User, Category, Expense, seedDefaultCategories } from '../models.js';
 import { wrap } from '../wrap.js';
@@ -15,7 +16,7 @@ router.post(
     await seedDefaultCategories(req.userId);
     await User.updateOne(
       { _id: req.userId },
-      { $set: { 'settings.monthlyLimit': 0, 'settings.currency': 'USD' } }
+      { $set: { 'settings.monthlyLimit': 0, 'settings.currency': 'INR' } }
     );
     res.json({ success: true });
   })

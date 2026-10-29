@@ -16,12 +16,12 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: APP_LATEST_VERSION
-        value: 2.1.0
+        value: '2.1.0'
       - key: APP_MIN_VERSION
-        value: 1.0.0
+        value: '2.1.0'
       - key: APP_APK_URL
-        value: ''
+        value: 'https://github.com/shifadmohammed2006-cmd/expense-tracker-mobile/releases/download/v2.1.0/Expense-Tracker-v2.1.apk'
       - key: APP_UPDATE_NOTES
-        value: ''
+        value: 'Offline mode, trip planner, calculator, and a redesigned interface.'
       - key: FORCE_UPDATE_OLD_APPS
-        value: 'false'
+        value: 'true'

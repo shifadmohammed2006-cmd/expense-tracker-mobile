@@ -2,6 +2,7 @@
   "cli": { "version": ">= 12.0.0", "appVersionSource": "remote" },
   "build": {
     "preview": {
+      "autoIncrement": true,
       "distribution": "internal",
       "android": { "buildType": "apk" },
       "env": { "EXPO_PUBLIC_API_URL": "https://expense-tracker-api-s6yg.onrender.com" }

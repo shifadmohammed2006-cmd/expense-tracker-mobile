@@ -24,4 +24,4 @@ services:
       - key: APP_UPDATE_NOTES
         value: 'Offline mode, trip planner, calculator, and a redesigned interface.'
       - key: FORCE_UPDATE_OLD_APPS
-        value: 'false'
+        value: 'true'

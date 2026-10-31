@@ -135,6 +135,10 @@ router.put(
       return res.status(400).json({ error: 'Trip data is required.' });
     }
 
+    if (await Trip.exists({ tripId, memberIds: req.userId })) {
+      return res.status(403).json({ error: 'Only the trip host can edit this trip.' });
+    }
+
     const exists = await Trip.exists({ userId: req.userId, tripId });
     if (!exists && (await Trip.countDocuments({ userId: req.userId })) >= MAX_TRIPS) {
       return res.status(400).json({ error: `You can have up to ${MAX_TRIPS} trips.` });

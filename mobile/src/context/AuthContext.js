@@ -2,6 +2,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api, loadToken, saveToken, clearToken, setUnauthorizedHandler } from '../api';
 import { load, remove, save, wipeUser } from '../store/storage';
+import { cancelAll } from '../utils/notifications';
 
 const AuthContext = createContext(null);
 const SESSION_KEY = 'et:session';
@@ -13,6 +14,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
   const dropSession = useCallback(async () => {
+    cancelAll(); // no reminders for someone who is logged out of a shared phone
     await clearToken();
     await remove(SESSION_KEY);
     setUser(null);

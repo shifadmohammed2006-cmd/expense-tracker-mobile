@@ -3,11 +3,14 @@ import React, { useState } from 'react';
 import { Alert, ScrollView, Share, Switch, Text, View } from 'react-native';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
+import { REMINDER_TIMES } from '../utils/notifyContent';
 import { useTheme } from '../theme';
 import { Button, Card, Chip, Field, ScreenHeader, SheetModal, Title, usePad } from '../components/ui';
 import { CURRENCIES } from '../utils/constants';
 import { APP_NAME, BRAND_LINE, COPYRIGHT, EXPORT_HEADER, NOTICE, VERSION } from '../branding';
 import Logo from '../components/Logo';
+import ShxBrand from '../components/ShxBrand';
 import SyncPill from '../components/SyncPill';
 
 const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
@@ -17,6 +20,7 @@ export default function Settings() {
   const pad = usePad();
   const { settings, categories, allExpenses, pending, updateSettings, resetAll, showToast } = useApp();
   const { user, logout, deleteAccount } = useAuth();
+  const notif = useNotifications();
   const [exporting, setExporting] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [password, setPassword] = useState('');
@@ -94,6 +98,51 @@ export default function Settings() {
         </Card>
 
         <Card style={{ marginBottom: 14 }}>
+          <Title>Notifications</Title>
+          <Text style={{ color: colors.subtext, fontSize: 13, marginBottom: 14 }}>
+            Friendly nudges to log expenses, plus alerts when you get close to your budget.
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={{ color: colors.text, fontSize: 15 }}>Reminders & alerts</Text>
+            <Switch value={notif.prefs.enabled} onValueChange={notif.setEnabled} trackColor={{ true: colors.primary }} />
+          </View>
+          {notif.perm === 'denied' ? (
+            <Text style={{ color: colors.warn, fontSize: 12, marginTop: 8 }}>
+              Phone notifications are blocked. Allow them in your phone's app settings to get reminders when the app is closed.
+            </Text>
+          ) : null}
+          {notif.prefs.enabled ? (
+            <>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+                <Text style={{ color: colors.text, fontSize: 15 }}>Daily reminder</Text>
+                <Switch value={notif.prefs.daily} onValueChange={(v) => notif.updatePrefs({ daily: v })} trackColor={{ true: colors.primary }} />
+              </View>
+              {notif.prefs.daily ? (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                  {REMINDER_TIMES.map((t) => (
+                    <Chip
+                      key={t.label}
+                      label={t.label}
+                      active={notif.prefs.hour === t.hour && notif.prefs.minute === t.minute}
+                      onPress={() => notif.updatePrefs({ hour: t.hour, minute: t.minute })}
+                    />
+                  ))}
+                </View>
+              ) : null}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+                <Text style={{ color: colors.text, fontSize: 15 }}>Weekly recap (Sundays)</Text>
+                <Switch value={notif.prefs.weekly} onValueChange={(v) => notif.updatePrefs({ weekly: v })} trackColor={{ true: colors.primary }} />
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+                <Text style={{ color: colors.text, fontSize: 15 }}>Budget alerts</Text>
+                <Switch value={notif.prefs.budget} onValueChange={(v) => notif.updatePrefs({ budget: v })} trackColor={{ true: colors.primary }} />
+              </View>
+              <Button title="Send a test notification" variant="outline" icon="bell" onPress={notif.sendTest} style={{ marginTop: 16 }} />
+            </>
+          ) : null}
+        </Card>
+
+        <Card style={{ marginBottom: 14 }}>
           <Title>Currency</Title>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {CURRENCIES.map((c) => (
@@ -138,6 +187,9 @@ export default function Settings() {
           <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginTop: 12 }}>{APP_NAME}</Text>
           {BRAND_LINE ? <Text style={{ color: colors.primary, fontWeight: '600', marginTop: 2 }}>{BRAND_LINE}</Text> : null}
           <Text style={{ color: colors.muted, fontSize: 12, marginTop: 2 }}>Version {VERSION}</Text>
+          <View style={{ marginTop: 16 }}>
+            <ShxBrand animated={false} compact onDark={isDark} mutedColor={colors.muted} />
+          </View>
           <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600', marginTop: 14 }}>{COPYRIGHT}</Text>
           <Text style={{ color: colors.subtext, fontSize: 11, textAlign: 'center', marginTop: 6, lineHeight: 16 }}>{NOTICE}</Text>
         </Card>

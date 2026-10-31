@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Logo from './Logo';
+import ShxBrand from './ShxBrand';
 import { BRAND_LINE, COPYRIGHT } from '../branding';
 
 export default function SplashScreen({ slow }) {
@@ -53,10 +54,14 @@ export default function SplashScreen({ slow }) {
         {BRAND_LINE ? <Text style={{ marginTop: 6, fontSize: 14, color: '#8E8E93' }}>{BRAND_LINE}</Text> : null}
       </Animated.View>
       {slow ? (
-        <Text style={{ position: 'absolute', bottom: insets.bottom + 40, color: '#8E8E93', fontSize: 13, textAlign: 'center', paddingHorizontal: 40 }}>
+        <Text style={{ position: 'absolute', bottom: insets.bottom + 150, color: '#8E8E93', fontSize: 13, textAlign: 'center', paddingHorizontal: 40 }}>
           Waking up the server - this can take up to a minute the first time.
         </Text>
       ) : null}
+      {/* "from SHX" - permanent company mark, sits at the bottom like the splash design */}
+      <View style={{ position: 'absolute', bottom: insets.bottom + 52, left: 0, right: 0, alignItems: 'center' }}>
+        <ShxBrand />
+      </View>
       <Text style={{ position: 'absolute', bottom: insets.bottom + 20, color: '#5E5E64', fontSize: 11 }}>{COPYRIGHT}</Text>
     </View>
   );

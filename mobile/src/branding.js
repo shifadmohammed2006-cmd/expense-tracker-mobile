@@ -3,7 +3,7 @@
 export const COMPANY = ''; // e.g. 'Acme Technologies'
 export const APP_NAME = 'Expense Tracker';
 export const YEAR = 2026;
-export const VERSION = '2.1.0';
+export const VERSION = '2.2.0';
 
 export const COPYRIGHT = COMPANY ? `© ${YEAR} ${COMPANY}. All rights reserved.` : `© ${YEAR}. All rights reserved.`;
 export const BRAND_LINE = COMPANY ? `by ${COMPANY}` : '';

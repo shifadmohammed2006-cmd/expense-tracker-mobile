@@ -2,7 +2,7 @@
   "expo": {
     "name": "Expense Tracker",
     "slug": "expense-tracker",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "extra": {
       "eas": {
         "projectId": "24796fce-a98c-47a3-bbe8-d1a349d5ed83"
@@ -21,7 +21,11 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A0A0C"
-      }
+      },
+      "permissions": [
+        "POST_NOTIFICATIONS",
+        "POST_NOTIFICATIONS"
+      ]
     },
     "description": "Expense Tracker with offline mode, trip planner and calculator. © 2026. All rights reserved.",
     "plugins": [
@@ -30,11 +34,25 @@
         {
           "android": {
             "enableProguardInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "enableMinifyInReleaseBuilds": true
           }
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#E5324B"
+        }
+      ],
       "expo-font"
-    ]
+    ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/24796fce-a98c-47a3-bbe8-d1a349d5ed83"
+    }
   }
 }

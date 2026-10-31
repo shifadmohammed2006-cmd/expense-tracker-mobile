@@ -161,13 +161,16 @@ export function AppProvider({ children }) {
       for (const s of serverTrips) {
         seen.add(s.id);
         const l = local.get(s.id);
-        if (l && (l.updatedAt || 0) > (s.updatedAt || 0)) {
-          merged.push(l);
+        const isMember = s.share?.role === 'member';
+        // Joined trips are view-only here, so the host's copy always wins.
+        if (!isMember && l && (l.updatedAt || 0) > (s.updatedAt || 0)) {
+          merged.push({ ...l, share: s.share });
           if (!reuploaded.current.has(l.id)) extraOps.push({ type: 'trip.upsert', id: l.id });
         } else merged.push(s);
       }
       for (const l of cur.trips) {
         if (seen.has(l.id)) continue;
+        if (l.share?.role === 'member') continue; // host deleted the trip or removed you
         merged.push(l);
         if (!reuploaded.current.has(l.id)) extraOps.push({ type: 'trip.upsert', id: l.id });
       }
@@ -261,7 +264,7 @@ export function AppProvider({ children }) {
   useEffect(() => {
     const sub = AppState.addEventListener('change', (s) => s === 'active' && sync());
     const timer = setInterval(() => {
-      if (dataRef.current.queue.length || !online) sync();
+      if (dataRef.current.queue.length || !online || dataRef.current.trips.some((t) => t.share)) sync();
     }, SYNC_EVERY_MS);
     return () => {
       sub.remove();
@@ -384,6 +387,7 @@ export function AppProvider({ children }) {
   // ---------- Trips ----------
   const saveTrip = (trip) =>
     edit((cur) => {
+      if (trip.share?.role === 'member') return null; // joined trips are view-only
       const t = { ...trip, updatedAt: Date.now() };
       const exists = cur.trips.some((x) => x.id === t.id);
       const trips = exists ? cur.trips.map((x) => (x.id === t.id ? t : x)) : [t, ...cur.trips];
@@ -391,6 +395,34 @@ export function AppProvider({ children }) {
       const next = { ...cur, trips };
       return pending ? next : enqueue(next, { type: 'trip.upsert', id: t.id });
     });
+
+  // Replace a trip locally with what the server says, without queueing an upload.
+  const putServerTrip = (serverTrip) =>
+    edit((cur) => {
+      const has = cur.trips.some((t) => t.id === serverTrip.id);
+      const trips = has ? cur.trips.map((t) => (t.id === serverTrip.id ? serverTrip : t)) : [serverTrip, ...cur.trips];
+      return { ...cur, trips };
+    });
+
+  // Join a friend's trip with their code. Needs internet. Returns the trip id.
+  const joinTrip = async (code) => {
+    const trip = await api.joinTrip(code);
+    putServerTrip(trip);
+    return trip.id;
+  };
+
+  // Host: turn on sharing and get the join code. Uploads the latest plan first so friends see it.
+  const shareTrip = async (id) => {
+    if (dataRef.current.queue.length) await sync();
+    const trip = await api.shareTrip(id);
+    putServerTrip(trip);
+    return trip.share?.code;
+  };
+
+  const unshareTrip = async (id) => {
+    await api.unshareTrip(id);
+    edit((cur) => ({ ...cur, trips: cur.trips.map((t) => (t.id === id ? { ...t, share: undefined } : t)) }), 'Sharing stopped.');
+  };
 
   const deleteTrip = (id) =>
     edit((cur) => {
@@ -450,6 +482,9 @@ export function AppProvider({ children }) {
     resetAll,
     saveTrip,
     deleteTrip,
+    joinTrip,
+    shareTrip,
+    unshareTrip,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

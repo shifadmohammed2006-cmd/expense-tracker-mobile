@@ -2,6 +2,14 @@
 
 > © 2026. All rights reserved. See `LICENSE`.
 
+## What's new in v2.2.0
+
+- **Group trips:** share a trip with a join code. Members can view the trip; only its host can edit it.
+- **Over-the-air updates:** after installing this native app version, JavaScript and asset fixes can be
+  published to the production channel with `eas update --channel production --message "..."`.
+- **Safer update gate:** old app versions remain unblocked until the APK download page and link have
+  been tested.
+
 ## What's new in v2.1
 
 - **New red & black look** (DigiCampus-style), dark by default - the light theme is still there in Settings.
@@ -37,7 +45,9 @@
    npx expo install --fix
    eas build -p android --profile preview      # keep your real Render URL in eas.json
    ```
-3. Install the new APK over the old one (same package name keeps your login).
+3. Install the new APK over the old one (same package name keeps your login). After this native
+   upgrade, publish JavaScript and asset-only fixes without another APK using
+   `eas update --channel production --message "Describe the fix"`.
 
 ---
 

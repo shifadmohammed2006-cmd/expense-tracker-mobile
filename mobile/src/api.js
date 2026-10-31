@@ -111,5 +111,8 @@ export const api = {
 
   getTrips: () => request('/trips'),
   saveTrip: (id, trip) => request(`/trips/${encodeURIComponent(id)}`, json('PUT', trip)),
+  joinTrip: (code) => request('/trips/join', json('POST', { code })),
+  shareTrip: (id) => request(`/trips/${encodeURIComponent(id)}/share`, { method: 'POST' }),
+  unshareTrip: (id) => request(`/trips/${encodeURIComponent(id)}/unshare`, { method: 'POST' }),
   deleteTrip: (id) => request(`/trips/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 };

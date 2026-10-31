@@ -1,33 +1,32 @@
 // © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
 import React, { useRef, useState } from 'react';
-import { Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../theme';
-import { Reveal, ScreenHeader, usePad } from '../components/ui';
+import { Button, EmptyNote, Reveal, ScreenHeader, SheetModal, usePad } from '../components/ui';
+import { useCalc } from '../context/CalcContext';
+import { isError, previewOf, showExpr, showResult } from '../utils/calcLogic';
 import { COPYRIGHT } from '../branding';
 
-// Immediate-execution calculator, Apple-style: big soft keys, springy presses.
+// Samsung calculator layout: C ( ) % ÷ / 7 8 9 × / 4 5 6 − / 1 2 3 + / ± 0 . =
 const ROWS = [
-  ['AC', '±', '%', '÷'],
+  ['C', '()', '%', '÷'],
   ['7', '8', '9', '×'],
   ['4', '5', '6', '−'],
   ['1', '2', '3', '+'],
-  ['0', '.', '='],
+  ['±', '0', '.', '='],
 ];
+const SHOWN = { '()': '( )', '±': '+/−' };
+const kindOf = (k) => (k === '=' ? 'equals' : '÷×−+'.includes(k) ? 'op' : k === 'C' || k === '()' || k === '%' ? 'fn' : 'num');
 
-const apply = (a, op, b) => (op === '+' ? a + b : op === '−' ? a - b : op === '×' ? a * b : b === 0 ? NaN : a / b);
-
-const fmt = (n) => {
-  if (!Number.isFinite(n)) return 'Error';
-  return String(Math.round(n * 1e8) / 1e8);
-};
-
-function Key({ label, onPress, kind = 'num', colors }) {
+function Key({ label, onPress, colors }) {
   const scale = useRef(new Animated.Value(1)).current;
   const spring = (v) => Animated.spring(scale, { toValue: v, speed: 45, bounciness: 4, useNativeDriver: true }).start();
-  const isOp = kind === 'op';
-  const isFn = kind === 'fn';
+  const kind = kindOf(label);
+  const bg = kind === 'equals' ? colors.primary : kind === 'op' ? colors.input : colors.card;
+  const fg = kind === 'equals' ? '#FFFFFF' : kind === 'op' || kind === 'fn' ? colors.primary : colors.text;
   return (
-    <Animated.View style={{ flex: label === '0' ? 2 : 1, transform: [{ scale }] }}>
+    <Animated.View style={{ flex: 1, transform: [{ scale }] }}>
       <Pressable
         onPress={onPress}
         onPressIn={() => spring(0.9)}
@@ -36,138 +35,86 @@ function Key({ label, onPress, kind = 'num', colors }) {
         style={{
           height: 64,
           margin: 5,
-          borderRadius: 20,
+          borderRadius: 32,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: isOp ? colors.primary : isFn ? colors.input : colors.card,
-          borderWidth: isOp ? 0 : StyleSheet.hairlineWidth,
+          backgroundColor: bg,
+          borderWidth: kind === 'equals' ? 0 : StyleSheet.hairlineWidth,
           borderColor: colors.border,
-          shadowColor: isOp ? colors.glow : 'transparent',
-          shadowOpacity: isOp ? 1 : 0,
+          shadowColor: kind === 'equals' ? colors.glow : 'transparent',
+          shadowOpacity: kind === 'equals' ? 1 : 0,
           shadowRadius: 14,
           shadowOffset: { width: 0, height: 6 },
-          elevation: isOp ? 6 : 0,
+          elevation: kind === 'equals' ? 6 : 0,
         }}
       >
-        <Text style={{ fontSize: 23, fontWeight: '600', color: isOp ? '#FFFFFF' : isFn ? colors.primary : colors.text }}>
-          {label}
-        </Text>
+        <Text style={{ fontSize: kind === 'num' ? 26 : 24, fontWeight: kind === 'num' ? '500' : '600', color: fg }}>{SHOWN[label] || label}</Text>
       </Pressable>
     </Animated.View>
   );
 }
 
-
 export default function Calculator() {
   const { colors } = useTheme();
   const pad = usePad();
-  const [display, setDisplay] = useState('0');
-  const [acc, setAcc] = useState(null);
-  const [op, setOp] = useState(null);
-  const [fresh, setFresh] = useState(true);
-  const [history, setHistory] = useState([]);
+  const { state, key, pick, clearHistory } = useCalc();
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const { expr, result, done, history } = state;
 
-  const digit = (d) => {
-    if (fresh) {
-      setDisplay(d === '.' ? '0.' : d);
-      setFresh(false);
-      return;
-    }
-    if (d === '.' && display.includes('.')) return;
-    setDisplay(display === '0' && d !== '.' ? d : display + d);
-  };
-
-  const chooseOp = (nextOp) => {
-    const cur = parseFloat(display) || 0;
-    if (op && !fresh) {
-      const r = apply(acc, op, cur);
-      setAcc(r);
-      setDisplay(fmt(r));
-    } else {
-      setAcc(cur);
-    }
-    setOp(nextOp);
-    setFresh(true);
-  };
-
-  const equals = () => {
-    if (op && acc != null) {
-      const cur = parseFloat(display) || 0;
-      const r = apply(acc, op, cur);
-      const line = `${fmt(acc)} ${op} ${fmt(cur)} = ${fmt(r)}`;
-      setHistory((h) => [line, ...h].slice(0, 12));
-      setDisplay(fmt(r));
-      setAcc(null);
-      setOp(null);
-      setFresh(true);
-    }
-  };
-
-  const clearAll = () => {
-    setDisplay('0');
-    setAcc(null);
-    setOp(null);
-    setFresh(true);
-  };
-
-  const negate = () => {
-    if (display === '0' || display === 'Error') return;
-    setDisplay(display.startsWith('-') ? display.slice(1) : `-${display}`);
-  };
-
-  const percent = () => {
-    const cur = parseFloat(display) || 0;
-    setDisplay(fmt(cur / 100));
-    setFresh(true);
-  };
-
-  const press = (label) => {
-    if (label === 'AC') return clearAll();
-    if (label === '±') return negate();
-    if (label === '%') return percent();
-    if (label === '=') return equals();
-    if ('÷×−+'.includes(label)) return chooseOp(label);
-    return digit(label);
-  };
-
-  const kind = (label) => ('÷×−+'.includes(label) || label === '=' ? 'op' : label === 'AC' || label === '±' || label === '%' ? 'fn' : 'num');
+  const error = done && isError(result);
+  const preview = previewOf(state);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg, ...pad }}>
       <ScreenHeader title="Calculator" subtitle="Quick maths for your money" />
       <Reveal style={{ flex: 1 }} from={10}>
-        {history.length ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 2, paddingBottom: 8, gap: 8 }}
-          >
-            {history.map((line, i) => (
-              <Text key={i} style={{ color: colors.muted, fontSize: 12, fontVariant: ['tabular-nums'] }}>
-                {line}   ·
+        {/* display */}
+        <View style={{ flex: 1, justifyContent: 'flex-end', paddingBottom: 6 }}>
+          {done ? (
+            <>
+              <Text numberOfLines={1} adjustsFontSizeToFit style={{ color: colors.muted, fontSize: 24, textAlign: 'right', fontVariant: ['tabular-nums'] }}>
+                {showExpr(expr)}
               </Text>
-            ))}
-          </ScrollView>
-        ) : null}
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                style={{ color: error ? colors.danger : colors.text, fontSize: error ? 30 : 56, fontWeight: '300', textAlign: 'right', fontVariant: ['tabular-nums'], marginTop: 4 }}
+              >
+                {showResult(result)}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.5}
+                style={{ color: colors.text, fontSize: 52, fontWeight: '300', textAlign: 'right', fontVariant: ['tabular-nums'] }}
+              >
+                {expr ? showExpr(expr) : '0'}
+              </Text>
+              <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 26, textAlign: 'right', marginTop: 4, fontVariant: ['tabular-nums'] }}>
+                {preview !== null ? `= ${showResult(preview)}` : ' '}
+              </Text>
+            </>
+          )}
+        </View>
 
-        <View style={{ flex: 1, justifyContent: 'flex-end', paddingBottom: 10 }}>
-          <Text style={{ color: colors.muted, fontSize: 14, textAlign: 'right', fontVariant: ['tabular-nums'] }}>
-            {acc != null && op ? `${fmt(acc)} ${op}` : ' '}
-          </Text>
-          <Text
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            style={{ color: colors.text, fontSize: 52, fontWeight: '300', textAlign: 'right', fontVariant: ['tabular-nums'] }}
-          >
-            {display}
-          </Text>
+        {/* history + backspace, like the Samsung calculator */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 6 }}>
+          <Pressable onPress={() => setHistoryOpen(true)} hitSlop={14} accessibilityLabel="History">
+            <Feather name="clock" size={22} color={colors.subtext} />
+          </Pressable>
+          <Pressable onPress={() => key('⌫')} onLongPress={() => key('C')} hitSlop={14} accessibilityLabel="Backspace">
+            <Feather name="delete" size={24} color={colors.primary} />
+          </Pressable>
         </View>
 
         <View>
           {ROWS.map((row, i) => (
             <View key={i} style={{ flexDirection: 'row' }}>
               {row.map((label) => (
-                <Key key={label} label={label} kind={kind(label)} colors={colors} onPress={() => press(label)} />
+                <Key key={label} label={label} colors={colors} onPress={() => key(label)} />
               ))}
             </View>
           ))}
@@ -175,6 +122,29 @@ export default function Calculator() {
 
         <Text style={{ color: colors.muted, fontSize: 11, textAlign: 'center', marginTop: 10 }}>{COPYRIGHT}</Text>
       </Reveal>
+
+      <SheetModal visible={historyOpen} onClose={() => setHistoryOpen(false)} title="History">
+        {history.length ? (
+          <>
+            {history.map((h, i) => (
+              <Pressable
+                key={`${i}-${h.expr}`}
+                onPress={() => {
+                  pick(h);
+                  setHistoryOpen(false);
+                }}
+                style={{ paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }}
+              >
+                <Text style={{ color: colors.muted, fontSize: 14, textAlign: 'right', fontVariant: ['tabular-nums'] }}>{showExpr(h.expr)}</Text>
+                <Text style={{ color: colors.text, fontSize: 24, fontWeight: '500', textAlign: 'right', fontVariant: ['tabular-nums'] }}>{showResult(h.result)}</Text>
+              </Pressable>
+            ))}
+            <Button title="Clear history" variant="outline" icon="trash-2" onPress={clearHistory} style={{ marginTop: 16 }} />
+          </>
+        ) : (
+          <EmptyNote text="No calculations yet." />
+        )}
+      </SheetModal>
     </View>
   );
 }

@@ -6,13 +6,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme';
 import Logo from '../components/Logo';
+import ShxBrand from '../components/ShxBrand';
 import { COPYRIGHT, MADE_BY } from '../branding';
 import { Button, Field } from '../components/ui';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function AuthScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { login, signup } = useAuth();
   const insets = useSafeAreaInsets();
   const [mode, setMode] = useState('login');
@@ -113,7 +114,10 @@ export default function AuthScreen() {
           </Text>
         </Pressable>
 
-        <Text style={{ color: colors.muted, fontSize: 12, textAlign: 'center', marginTop: 36 }}>{COPYRIGHT}</Text>
+        <View style={{ marginTop: 36, alignItems: 'center' }}>
+          <ShxBrand animated={false} compact onDark={isDark} mutedColor={colors.muted} />
+        </View>
+        <Text style={{ color: colors.muted, fontSize: 12, textAlign: 'center', marginTop: 14 }}>{COPYRIGHT}</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );

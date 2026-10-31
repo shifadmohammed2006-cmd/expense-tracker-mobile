@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import { useTheme } from '../theme';
 import { Button, Card, EmptyNote, ProgressBar, ScreenHeader, num, usePad } from '../components/ui';
 import { TripSheet } from '../components/TripSheets';
+import { JoinTripSheet } from '../components/TripShareCard';
 import { formatCurrency, formatDayLabel } from '../utils/format';
 import { statusLabel, tripNumbers } from '../utils/trip';
 
@@ -13,6 +14,7 @@ export default function Trips({ onOpen }) {
   const pad = usePad();
   const { trips, settings, saveTrip, refreshing, refresh } = useApp();
   const [creating, setCreating] = useState(false);
+  const [joining, setJoining] = useState(false);
   const cur = settings.currency;
 
   const create = (trip) => {
@@ -25,12 +27,15 @@ export default function Trips({ onOpen }) {
     <>
       <ScrollView contentContainerStyle={pad} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}>
         <ScreenHeader title="Trips" subtitle="Plan every rupee before you pack." />
-        <Button title="Plan a new trip" icon="plus" onPress={() => setCreating(true)} style={{ marginBottom: 16 }} />
+        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+          <Button title="Plan a trip" icon="plus" onPress={() => setCreating(true)} style={{ flex: 1 }} />
+          <Button title="Join with code" icon="users" variant="outline" onPress={() => setJoining(true)} style={{ flex: 1 }} />
+        </View>
 
         {trips.length === 0 ? (
           <Card>
             <Text style={{ fontSize: 40, textAlign: 'center' }}>🧳</Text>
-            <EmptyNote text={'No trips yet.\nPlan stay, bus, train, food, fuel and split costs with friends - all in one place, even offline.'} />
+            <EmptyNote text={"No trips yet.\nPlan a trip, or join a friend's with their code. Plan stay, bus, train, food, fuel and split costs with friends - all in one place, even offline."} />
           </Card>
         ) : (
           trips.map((t) => {
@@ -48,6 +53,11 @@ export default function Trips({ onOpen }) {
                       <Text style={{ fontSize: 12, color: colors.subtext }} numberOfLines={1}>
                         {t.destination ? `${t.destination} · ` : ''}{formatDayLabel(t.startDate)} - {formatDayLabel(t.endDate)}
                       </Text>
+                      {t.share ? (
+                        <Text style={{ fontSize: 11, color: colors.primary, fontWeight: '600', marginTop: 2 }} numberOfLines={1}>
+                          {t.share.role === 'host' ? `👥 Hosting · ${t.share.members.length} joined` : `👥 Hosted by ${t.share.host}`}
+                        </Text>
+                      ) : null}
                     </View>
                     <View style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, backgroundColor: `${tint}18` }}>
                       <Text style={{ color: tint, fontSize: 11, fontWeight: '700' }}>{statusLabel(nums)}</Text>
@@ -66,6 +76,7 @@ export default function Trips({ onOpen }) {
           })
         )}
       </ScrollView>
+      <JoinTripSheet visible={joining} onClose={() => setJoining(false)} onJoined={(id) => { setJoining(false); onOpen(id); }} />
       <TripSheet visible={creating} trip={null} onClose={() => setCreating(false)} onSave={create} />
     </>
   );

@@ -1,5 +1,5 @@
 // © 2026 Expense Tracker. All rights reserved. Unauthorised copying or redistribution is prohibited.
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, BackHandler, Pressable, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
@@ -10,6 +10,9 @@ import { AppProvider, useApp } from './src/context/AppContext';
 import SplashScreen from './src/components/SplashScreen';
 import UpdateGate from './src/components/UpdateGate';
 import TabBar from './src/components/TabBar';
+import NotificationBanner from './src/components/NotificationBanner';
+import { NotificationProvider } from './src/context/NotificationContext';
+import { CalcProvider } from './src/context/CalcContext';
 import ExpenseForm from './src/components/ExpenseForm';
 import { Button, Reveal, ToastHost } from './src/components/ui';
 import AuthScreen from './src/screens/AuthScreen';
@@ -22,7 +25,7 @@ import Trips from './src/screens/Trips';
 import TripDetail from './src/screens/TripDetail';
 import Calculator from './src/screens/Calculator';
 
-const MIN_SPLASH_MS = 1800;
+const MIN_SPLASH_MS = 2600; // long enough for the "from SHX" animation to finish
 const SLOW_HINT_MS = 6000;
 
 function MainShell() {
@@ -52,7 +55,18 @@ function MainShell() {
   const openForm = (expense = null) => setForm({ open: true, expense });
   const closeForm = () => setForm((f) => ({ ...f, open: false }));
 
+  // Where a tapped notification (pop-up or phone notification) should take the person.
+  const onNotificationAction = useCallback((action) => {
+    if (action === 'add') setForm({ open: true, expense: null });
+    else if (action === 'expenses' || action === 'budget' || action === 'dashboard') {
+      setTripId(null);
+      setTab(action);
+    }
+  }, []);
+
   return (
+    <NotificationProvider onAction={onNotificationAction}>
+    <CalcProvider>
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Every tab slides and fades in when you switch to it. */}
       <Reveal key={tab} style={{ flex: 1 }} from={12}>
@@ -72,7 +86,10 @@ function MainShell() {
       <TabBar active={tab} onChange={setTab} />
       <ExpenseForm visible={form.open} expense={form.expense} onClose={closeForm} />
       <ToastHost toast={toast} />
+      <NotificationBanner offset={toast ? 62 : 0} />
     </View>
+    </CalcProvider>
+    </NotificationProvider>
   );
 }
 

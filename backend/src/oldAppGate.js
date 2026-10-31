@@ -13,11 +13,13 @@ export function oldAppGate(req, res, next) {
   if (req.get('x-app-version') || OPEN_PATHS.has(req.path)) return next();
 
   const host = req.get('x-forwarded-host') || req.get('host') || '';
-  const forwardedProto = req.get('x-forwarded-proto') || req.protocol || 'https';
-  const protocol = forwardedProto.split(',')[0].trim() === 'https' ? 'https' : 'http';
   const message =
     process.env.OLD_APP_MESSAGE ||
-    `UPDATE REQUIRED. Open ${protocol}://${host}/update in your phone's browser, download the new version and install it.`;
+    `NEW VERSION AVAILABLE - UPDATE REQUIRED.\n` +
+    `1) Open Chrome on this phone.\n` +
+    `2) Type this link in the address bar: ${host}/update\n` +
+    `3) Tap Download, then open the file and tap Install.\n` +
+    `Your data is safe - just log in again after installing.`;
   const isLogin = req.path === '/auth/login' || req.path === '/auth/signup';
   res.status(isLogin ? 403 : 401).json({ error: message });
 }

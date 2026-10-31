@@ -1,16 +1,28 @@
 {
-  "cli": { "version": ">= 12.0.0", "appVersionSource": "remote" },
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
   "build": {
     "preview": {
-      "autoIncrement": true,
       "distribution": "internal",
-      "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://expense-tracker-api-s6yg.onrender.com" }
+      "channel": "preview",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://expense-tracker-api-s6yg.onrender.com"
+      }
     },
     "production": {
       "autoIncrement": true,
-      "env": { "EXPO_PUBLIC_API_URL": "https://expense-tracker-api-s6yg.onrender.com" }
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://expense-tracker-api-s6yg.onrender.com"
+      }
     }
   },
-  "submit": { "production": {} }
+  "submit": {
+    "production": {}
+  }
 }

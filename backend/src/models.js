@@ -47,10 +47,15 @@ const tripSchema = new Schema(
     tripId: { type: String, required: true, maxlength: 64 },
     data: { type: Schema.Types.Mixed, required: true },
     updatedAtClient: { type: Number, default: 0 },
+    // Group trips: the host (userId) shares a join code; friends who enter it are added to memberIds and can view the trip.
+    joinCode: { type: String, default: undefined },
+    memberIds: { type: [{ type: Schema.Types.ObjectId, ref: 'User' }], default: [] },
   },
   { timestamps: true }
 );
 tripSchema.index({ userId: 1, tripId: 1 }, { unique: true });
+tripSchema.index({ joinCode: 1 }, { unique: true, sparse: true });
+tripSchema.index({ memberIds: 1 });
 
 export const User = model('User', userSchema);
 export const Trip = model('Trip', tripSchema);

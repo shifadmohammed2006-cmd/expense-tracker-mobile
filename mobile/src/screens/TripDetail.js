@@ -7,6 +7,7 @@ import { useTheme } from '../theme';
 import { Button, Card, Chip, EmptyNote, Field, ProgressBar, Title, num, usePad } from '../components/ui';
 import { Donut } from '../components/Charts';
 import { CompareSheet, DayItemSheet, ItemSheet, SpendSheet, TravelersSheet, TripSheet, TypePicker } from '../components/TripSheets';
+import { TripShareCard } from '../components/TripShareCard';
 import { newId } from '../store/storage';
 import { formatCurrency, formatDayLabel, listDates, weekdayShort } from '../utils/format';
 import { ITEM_TYPES, PACKING_ESSENTIALS, itemAmount, settleUp, statusLabel, tripNumbers, tripSummaryText } from '../utils/trip';
@@ -66,7 +67,9 @@ export default function TripDetail({ tripId, onBack }) {
   const money = (v) => formatCurrency(v, cur);
   const nums = tripNumbers(trip);
   const nameOf = (id) => trip.travelers.find((t) => t.id === id)?.name || '?';
-  const patch = (changes) => saveTrip({ ...trip, ...changes });
+  const readOnly = trip.share?.role === 'member';
+  const patch = (changes) => (readOnly ? null : saveTrip({ ...trip, ...changes }));
+  const ro = (fn) => (readOnly ? undefined : fn);
 
   // ----- planned costs -----
   const saveItem = (item) => {
@@ -195,23 +198,27 @@ export default function TripDetail({ tripId, onBack }) {
       <Card style={{ marginBottom: 14 }}>
         <Title>Travellers</Title>
         <Text style={{ color: colors.text, marginBottom: 12 }}>{trip.travelers.map((t) => t.name).join(' · ')}</Text>
-        <Button title="Edit travellers" variant="outline" icon="users" onPress={() => setTravelersOpen(true)} />
+        {readOnly ? null : <Button title="Edit travellers" variant="outline" icon="users" onPress={() => setTravelersOpen(true)} />}
       </Card>
+
+      <TripShareCard trip={trip} onLeft={onBack} />
 
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Button title="Share plan" icon="share-2" onPress={share} style={{ flex: 1 }} />
-        <Button title="Edit" variant="outline" icon="edit-2" onPress={() => setEditTrip(true)} style={{ flex: 1 }} />
+        {readOnly ? null : <Button title="Edit" variant="outline" icon="edit-2" onPress={() => setEditTrip(true)} style={{ flex: 1 }} />}
       </View>
-      <Button title="Delete trip" variant="dangerOutline" icon="trash-2" onPress={confirmDelete} style={{ marginTop: 10 }} />
+      {readOnly ? null : <Button title="Delete trip" variant="dangerOutline" icon="trash-2" onPress={confirmDelete} style={{ marginTop: 10 }} />}
     </>
   );
 
   const costs = (
     <>
-      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
-        <Button title="Add cost" icon="plus" onPress={() => setPicker(true)} style={{ flex: 1 }} />
-        <Button title="Compare" icon="shuffle" variant="outline" onPress={() => setCompare(true)} style={{ flex: 1 }} />
-      </View>
+      {readOnly ? null : (
+        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
+          <Button title="Add cost" icon="plus" onPress={() => setPicker(true)} style={{ flex: 1 }} />
+          <Button title="Compare" icon="shuffle" variant="outline" onPress={() => setCompare(true)} style={{ flex: 1 }} />
+        </View>
+      )}
       {trip.plan.length === 0 ? (
         <Card><EmptyNote text={'Nothing planned yet.\nAdd room, bus, train, food, fuel and more - totals are worked out for you.'} /></Card>
       ) : (
@@ -221,7 +228,7 @@ export default function TripDetail({ tripId, onBack }) {
             return (
               <Pressable
                 key={i.id}
-                onPress={() => setItemSheet({ open: true, type: i.type, item: i })}
+                onPress={ro(() => setItemSheet({ open: true, type: i.type, item: i }))}
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderTopWidth: idx === 0 ? 0 : 1, borderTopColor: colors.border }}
               >
                 <TypeBadge type={i.type} />
@@ -247,7 +254,7 @@ export default function TripDetail({ tripId, onBack }) {
           <Row label="Planned costs" value={money(nums.planned)} />
           <Row label={`Emergency buffer (${trip.contingencyPct}%)`} value={money(nums.buffer)} />
           <Row label="Total" value={money(nums.plannedTotal)} bold />
-          <Text style={{ color: colors.subtext, fontSize: 12, marginTop: 8 }}>Tap the circle on a cost once it is booked or paid.</Text>
+          {readOnly ? null : <Text style={{ color: colors.subtext, fontSize: 12, marginTop: 8 }}>Tap the circle on a cost once it is booked or paid.</Text>}
         </Card>
       ) : null}
     </>
@@ -256,20 +263,22 @@ export default function TripDetail({ tripId, onBack }) {
   const dates = listDates(trip.startDate, trip.endDate);
   const days = (
     <>
-      <Button title="Add to itinerary" icon="plus" onPress={() => setDaySheet({ open: true, entry: null, date: null })} style={{ marginBottom: 14 }} />
+      {readOnly ? null : <Button title="Add to itinerary" icon="plus" onPress={() => setDaySheet({ open: true, entry: null, date: null })} style={{ marginBottom: 14 }} />}
       {dates.map((dt, idx) => {
         const entries = (trip.itinerary || []).filter((e) => e.date === dt).sort((a, b) => String(a.time).localeCompare(String(b.time)));
         return (
           <Card key={dt} style={{ marginBottom: 12 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: entries.length ? 8 : 0 }}>
               <Text style={{ color: colors.text, fontWeight: '700' }}>Day {idx + 1} · {weekdayShort(dt)}, {formatDayLabel(dt)}</Text>
-              <Pressable onPress={() => setDaySheet({ open: true, entry: null, date: dt })} hitSlop={10}>
-                <Feather name="plus-circle" size={20} color={colors.primary} />
-              </Pressable>
+              {readOnly ? null : (
+                <Pressable onPress={() => setDaySheet({ open: true, entry: null, date: dt })} hitSlop={10}>
+                  <Feather name="plus-circle" size={20} color={colors.primary} />
+                </Pressable>
+              )}
             </View>
             {entries.length === 0 ? <Text style={{ color: colors.subtext, fontSize: 13, marginTop: 6 }}>Nothing planned</Text> : null}
             {entries.map((e) => (
-              <Pressable key={e.id} onPress={() => setDaySheet({ open: true, entry: e, date: null })} style={{ flexDirection: 'row', gap: 12, paddingVertical: 8 }}>
+              <Pressable key={e.id} onPress={ro(() => setDaySheet({ open: true, entry: e, date: null }))} style={{ flexDirection: 'row', gap: 12, paddingVertical: 8 }}>
                 <Pressable onPress={() => patch({ itinerary: trip.itinerary.map((x) => (x.id === e.id ? { ...x, done: !x.done } : x)) })} hitSlop={10}>
                   <Feather name={e.done ? 'check-square' : 'square'} size={20} color={e.done ? colors.primary : colors.muted} />
                 </Pressable>
@@ -288,7 +297,7 @@ export default function TripDetail({ tripId, onBack }) {
   const { paid, share: shares, transfers } = settleUp(trip);
   const spend = (
     <>
-      <Button title="Log spending" icon="plus" onPress={() => setSpendSheet({ open: true, spend: null })} style={{ marginBottom: 14 }} />
+      {readOnly ? null : <Button title="Log spending" icon="plus" onPress={() => setSpendSheet({ open: true, spend: null })} style={{ marginBottom: 14 }} />}
       <Card style={{ marginBottom: 14 }}>
         <Title>Settle up</Title>
         {trip.spends.length === 0 ? (
@@ -317,7 +326,7 @@ export default function TripDetail({ tripId, onBack }) {
       {trip.spends.length > 0 ? (
         <Card style={{ paddingVertical: 6 }}>
           {trip.spends.map((s, idx) => (
-            <Pressable key={s.id} onPress={() => setSpendSheet({ open: true, spend: s })} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderTopWidth: idx === 0 ? 0 : 1, borderTopColor: colors.border }}>
+            <Pressable key={s.id} onPress={ro(() => setSpendSheet({ open: true, spend: s }))} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderTopWidth: idx === 0 ? 0 : 1, borderTopColor: colors.border }}>
               <TypeBadge type={s.type} />
               <View style={{ flex: 1 }}>
                 <Text style={{ color: colors.text, fontWeight: '600' }} numberOfLines={1}>{s.title}</Text>
@@ -342,11 +351,13 @@ export default function TripDetail({ tripId, onBack }) {
           <Text style={{ color: colors.subtext }}>{doneCount} / {packing.length}</Text>
         </View>
         <ProgressBar value={doneCount} max={packing.length} />
-        <Button title="Add trip essentials" icon="package" variant="outline" onPress={addEssentials} style={{ marginTop: 14 }} />
+        {readOnly ? null : <Button title="Add trip essentials" icon="package" variant="outline" onPress={addEssentials} style={{ marginTop: 14 }} />}
       </Card>
-      <Card style={{ marginBottom: 14 }}>
-        <PackInput value={packText} onChange={setPackText} onSubmit={() => { addPack(packText); setPackText(''); }} />
-      </Card>
+      {readOnly ? null : (
+        <Card style={{ marginBottom: 14 }}>
+          <PackInput value={packText} onChange={setPackText} onSubmit={() => { addPack(packText); setPackText(''); }} />
+        </Card>
+      )}
       {groups.map((g) => (
         <Card key={g} style={{ marginBottom: 12 }}>
           <Text style={{ fontWeight: '700', color: colors.text, marginBottom: 6 }}>{g}</Text>
@@ -356,9 +367,11 @@ export default function TripDetail({ tripId, onBack }) {
                 <Feather name={p.done ? 'check-square' : 'square'} size={20} color={p.done ? colors.primary : colors.muted} />
                 <Text style={{ color: colors.text, flex: 1, textDecorationLine: p.done ? 'line-through' : 'none' }}>{p.text}</Text>
               </Pressable>
-              <Pressable onPress={() => patch({ packing: packing.filter((x) => x.id !== p.id) })} hitSlop={10}>
-                <Feather name="x" size={16} color={colors.muted} />
-              </Pressable>
+              {readOnly ? null : (
+                <Pressable onPress={() => patch({ packing: packing.filter((x) => x.id !== p.id) })} hitSlop={10}>
+                  <Feather name="x" size={16} color={colors.muted} />
+                </Pressable>
+              )}
             </View>
           ))}
         </Card>
@@ -391,6 +404,9 @@ export default function TripDetail({ tripId, onBack }) {
           ))}
         </ScrollView>
 
+        {readOnly ? (
+          <Text style={{ color: colors.subtext, fontSize: 12, marginBottom: 12 }}>👀 Shared by {trip.share.host} - view only.</Text>
+        ) : null}
         {body}
         <Text style={{ textAlign: 'center', color: colors.muted, fontSize: 11, marginTop: 20 }}>{COPYRIGHT_SHORT}</Text>
       </ScrollView>

@@ -15,13 +15,15 @@ services:
         sync: false        # you paste this in the Render dashboard
       - key: JWT_SECRET
         generateValue: true
+      # In-app update gate (edit these in the Render dashboard when you release a new APK)
       - key: APP_LATEST_VERSION
-        value: '2.1.0'
+        value: 2.0.0
       - key: APP_MIN_VERSION
-        value: '2.1.0'
+        value: 1.0.0
       - key: APP_APK_URL
-        value: 'https://github.com/shifadmohammed2006-cmd/expense-tracker-mobile/releases/download/v2.1.0/Expense-Tracker-v2.1.apk'
+        value: ''
       - key: APP_UPDATE_NOTES
-        value: 'Offline mode, trip planner, calculator, and a redesigned interface.'
+        value: ''
+      # Set to 'true' ONLY when the APK link is ready: blocks the old v1 app and tells people to update
       - key: FORCE_UPDATE_OLD_APPS
         value: 'false'

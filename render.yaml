@@ -33,4 +33,4 @@ services:
           Your data is safe - just log in again.
       # Set to 'true' ONLY when the APK link is ready: blocks the old v1 app and tells people to update
       - key: FORCE_UPDATE_OLD_APPS
-        value: 'false'
+        value: 'true'

@@ -17,13 +17,20 @@ services:
         generateValue: true
       # In-app update gate (edit these in the Render dashboard when you release a new APK)
       - key: APP_LATEST_VERSION
-        value: 2.0.0
+        value: 2.2.0
       - key: APP_MIN_VERSION
-        value: 1.0.0
+        value: 2.2.0
       - key: APP_APK_URL
-        value: ''
+        value: https://github.com/shifadmohammed2006-cmd/expense-tracker-mobile/releases/download/v2.2.0/Expense-Tracker-v2.2.0.apk
       - key: APP_UPDATE_NOTES
-        value: ''
+        value: 'Group trips: share a join code with friends. Faster, smoother app.'
+      - key: OLD_APP_MESSAGE
+        value: |-
+          NEW VERSION AVAILABLE - UPDATE REQUIRED.
+          1) Open Chrome.
+          2) Type: https://expense-tracker-api-s6yg.onrender.com/update
+          3) Tap Download, then Install.
+          Your data is safe - just log in again.
       # Set to 'true' ONLY when the APK link is ready: blocks the old v1 app and tells people to update
       - key: FORCE_UPDATE_OLD_APPS
         value: 'false'
